@@ -4,6 +4,12 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Versión que se va a compilar (por ejemplo, v0.4.0)'
+        required: true
+        default: 'v0.4.0'
 
 permissions:
   contents: write
@@ -23,7 +29,11 @@ jobs:
       - name: Extraer el código de la versión
         shell: pwsh
         run: |
-          $archive = "MailDesk-source-${{ github.ref_name }}.zip"
+          $version = "${{ inputs.version }}"
+          if ([string]::IsNullOrWhiteSpace($version)) {
+            $version = "${{ github.ref_name }}"
+          }
+          $archive = "MailDesk-source-$version.zip"
           if (-not (Test-Path $archive)) {
             throw "No se encuentra $archive"
           }
