@@ -2,12 +2,11 @@ name: Publicar MailDesk para Windows
 
 on:
   push:
-    tags:
-      - 'v*'
     branches:
       - main
     paths:
       - 'release-version.txt'
+      - '.github/workflows/release.yml'
   workflow_dispatch:
     inputs:
       version:
@@ -49,6 +48,19 @@ jobs:
             throw "No se encuentra $archive"
           }
           Expand-Archive -Path $archive -DestinationPath app -Force
+
+      - name: Crear la etiqueta de la versión
+        if: github.ref_type != 'tag'
+        shell: pwsh
+        run: |
+          $version = "${{ inputs.version }}"
+          if ([string]::IsNullOrWhiteSpace($version)) {
+            $version = (Get-Content "release-version.txt" -Raw).Trim()
+          }
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag $version
+          git push origin $version
 
       - name: Instalar dependencias
         working-directory: app
