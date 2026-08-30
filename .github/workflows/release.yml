@@ -4,6 +4,10 @@ on:
   push:
     tags:
       - 'v*'
+    branches:
+      - main
+    paths:
+      - 'release-version.txt'
   workflow_dispatch:
     inputs:
       version:
@@ -31,7 +35,14 @@ jobs:
         run: |
           $version = "${{ inputs.version }}"
           if ([string]::IsNullOrWhiteSpace($version)) {
-            $version = "${{ github.ref_name }}"
+            if ("${{ github.ref_type }}" -eq "tag") {
+              $version = "${{ github.ref_name }}"
+            } else {
+              $version = (Get-Content "release-version.txt" -Raw).Trim()
+            }
+          }
+          if ($version -notmatch '^v\d+\.\d+\.\d+$') {
+            throw "Versión no válida: $version"
           }
           $archive = "MailDesk-source-$version.zip"
           if (-not (Test-Path $archive)) {
