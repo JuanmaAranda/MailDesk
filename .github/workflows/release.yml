@@ -87,7 +87,7 @@ jobs:
           if ([string]::IsNullOrWhiteSpace($version)) {
             $version = (Get-Content "release-version.txt" -Raw).Trim()
           }
-          $installer = Get-ChildItem -Path "app/release" -Filter "MailDesk Setup *.exe" | Where-Object { $_.Name -notmatch '__uninstaller' } | Select-Object -First 1
+          $installer = Get-ChildItem -Path "app/release" -Filter "MailDesk-Setup-*.exe" | Where-Object { $_.Name -notmatch '__uninstaller' } | Select-Object -First 1
           if (-not $installer) { throw "No se encuentra el instalador de Windows." }
           $blockMap = "$($installer.FullName).blockmap"
           $latest = "app/release/latest.yml"
