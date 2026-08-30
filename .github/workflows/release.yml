@@ -59,8 +59,11 @@ jobs:
           }
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git tag $version
-          git push origin $version
+          git ls-remote --exit-code --tags origin "refs/tags/$version"
+          if ($LASTEXITCODE -ne 0) {
+            git tag $version
+            git push origin $version
+          }
 
       - name: Instalar dependencias
         working-directory: app
@@ -70,8 +73,26 @@ jobs:
         working-directory: app
         run: npm run check
 
-      - name: Compilar y publicar
+      - name: Compilar para Windows
         working-directory: app
-        run: npm run publish
+        run: npm run dist:win
+
+      - name: Publicar el instalador y la actualización
+        shell: pwsh
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $version = "${{ inputs.version }}"
+          if ([string]::IsNullOrWhiteSpace($version)) {
+            $version = (Get-Content "release-version.txt" -Raw).Trim()
+          }
+          $installer = Get-ChildItem -Path "app/release" -Filter "MailDesk Setup *.exe" | Where-Object { $_.Name -notmatch '__uninstaller' } | Select-Object -First 1
+          if (-not $installer) { throw "No se encuentra el instalador de Windows." }
+          $blockMap = "$($installer.FullName).blockmap"
+          $latest = "app/release/latest.yml"
+          if (-not (Test-Path $blockMap) -or -not (Test-Path $latest)) { throw "Faltan archivos de actualización." }
+          gh release view $version --repo "${{ github.repository }}" 2>$null
+          if ($LASTEXITCODE -ne 0) {
+            gh release create $version --repo "${{ github.repository }}" --title "MailDesk $version"
+          }
+          gh release upload $version $installer.FullName $blockMap $latest --clobber --repo "${{ github.repository }}"
