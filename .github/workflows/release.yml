@@ -68,7 +68,13 @@ jobs:
 
       - name: Instalar dependencias
         working-directory: app
-        run: npm ci
+        shell: pwsh
+        run: |
+          if (Test-Path package-lock.json) {
+            npm ci
+          } else {
+            npm install
+          }
 
       - name: Comprobar el código
         working-directory: app
