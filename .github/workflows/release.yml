@@ -103,3 +103,5 @@ jobs:
             gh release create $version --repo "${{ github.repository }}" --title "MailDesk $version"
           }
           gh release upload $version $installer.FullName $blockMap $latest --clobber --repo "${{ github.repository }}"
+
+# Publicación 0.8.13: empaquetado corregido
