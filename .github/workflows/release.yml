@@ -48,7 +48,8 @@ jobs:
           if (-not (Test-Path $archive)) {
             throw "No se encuentra $archive"
           }
-          Expand-Archive -Path $archive -DestinationPath app -Force
+          New-Item -ItemType Directory -Path app -Force | Out-Null
+          tar -xf $archive -C app
 
       - name: Crear la etiqueta de la versión
         if: github.ref_type != 'tag'
